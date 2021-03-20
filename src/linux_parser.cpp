@@ -1,3 +1,4 @@
+#include "linux_parser.h"
 #include <dirent.h>
 #include <unistd.h>
 #include <algorithm>
@@ -88,6 +89,15 @@ float LinuxParser::MemoryUtilization() {
           TotalMemory = std::stof(value);
         } else if (key == "MemFree") {
           replace(line.begin(), line.end(),' ', ':');
+      replace(line.begin(), line.end(), " ", ":");
+      istringstream linestream(line);
+      while (linestream >> key >> value) {
+        if (key == "MemTotal") {
+          replace(line.begin(), line.end(), " ", ":");
+          linestream >> value;
+          TotalMemory = std::stof(value);
+        } else if (key == "MemFree") {
+          replace(line.begin(), line.end(), " ", ":");
           linestream >> value;
           FreeMemory = std::stof(value);
           UsedMemory = TotalMemory - FreeMemory;
@@ -358,6 +368,7 @@ int LinuxParser::RunningProcesses() {
 string LinuxParser::Command(int pid) {
   string value = "";
   std::ifstream filestream(kProcDirectory + '/' + std::to_string(pid) +
+  std::ifstream filestream(kProcDirectory + "/" + std::to_string(pid) +
                            kCmdlineFilename);
   if (filestream.is_open()) {
     while (getline(filestream, value)) {
@@ -443,6 +454,7 @@ long LinuxParser::UpTime(int pid) {
   int kStarttime_ = 21;
   int i;
   ifstream filename(kProcDirectory + '/' + std::to_string(pid) + kStatFilename);
+  ifstream filename(kProcDirectory + "/" + std::to_string(pid) + kStatFilename);
   if (filename.is_open()) {
     while (getline(filename, line)) {
       istringstream linestream(line);
@@ -458,6 +470,7 @@ long LinuxParser::UpTime(int pid) {
         }
       }
     }
+    return uptime;
   }
       return uptime;
 
